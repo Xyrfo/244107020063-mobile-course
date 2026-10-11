@@ -1,0 +1,20 @@
+# Flutter / Dart artifacts
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+*.iml
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# File nyasar (tidak relevan tugas)
+/Rifo.dart
+/flutter_application_1/
+/ss/
