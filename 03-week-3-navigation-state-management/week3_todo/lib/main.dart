@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:week3_todo/providers/todo_page.dart';
-import 'providers/todo_page.dart';
 
 void main() => runApp(const ProviderScope(child: MyApp()));
 
