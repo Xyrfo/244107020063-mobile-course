@@ -3,15 +3,14 @@
 **Mahasiswa:** Rifo Anggi Barbara Danuarta  
 **NIM:** 244107020063  
 **Kelas:** TI-3F  
-**Project yang direview:** `week7_campus_notify` (Clean Architecture — Minggu 7)  
 **Tanggal review:** 28 Oktober 2026  
-**Reviewer mandiri:** Rifo Anggi Barbara Danuarta  
+**Project yang direview:** Week 5, 6, dan 7 (portofolio mid-semester)
 
 ---
 
 ## Bagian 1 — Audit Riwayat Git
 
-### 1.1 Output `git log --oneline -15`
+### Output `git log --oneline -15`
 
 ```
 305d4d4 Update README progres Week 7
@@ -28,187 +27,321 @@ f3597bc Tugas 1 - Week 1
 bc40d1d Initial commit
 ```
 
-### 1.2 Temuan Masalah Riwayat Commit
+### Output `git branch -a`
 
-| No | Masalah yang Ditemukan | Commit Contoh | Kategori |
-|----|------------------------|---------------|----------|
-| 1 | Pesan commit tidak menggunakan format konvensional (`tipe(scope): deskripsi`) | `Tugas 7 - Week 7 Clean Architecture` | Pesan commit buruk |
-| 2 | Semua commit langsung ke branch `main` — tidak ada branch `develop` atau `feature/*` | Semua commit | Tidak ada branching strategy |
-| 3 | Satu commit memuat banyak perubahan sekaligus (seluruh week dalam 1 commit) | `Tugas 7 - Week 7 Clean Architecture` | Commit terlalu besar |
-| 4 | Tidak ada branch `fix/*` untuk perbaikan bug | `d5eb810 Fix duplicate import...` | Tidak ada branching strategy |
-| 5 | Tidak ada file `.gitignore` dari awal — baru ditambahkan di commit `3379892` | `3379892 Update README progres dan .gitignore` | Hygiene repository |
+```
++ agents/add-screenshot-profil2-to-readme
+* main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/main
+```
 
----
+### Masalah yang Ditemukan
 
-## Bagian 2 — Tabel Perbaikan Commit Message (Simulasi Rewrite)
-
-> Tugas: tulis ulang 3 pesan commit lama ke format konvensional beserta alasannya.
-
-| No | Pesan Lama (buruk) | Pesan Baru (konvensional) | Alasan Perbaikan |
-|----|---------------------|---------------------------|------------------|
-| 1 | `Tugas 7 - Week 7 Clean Architecture` | `feat(campus-notify): implementasi Clean Architecture dengan domain, data, presentation layer` | Format konvensional menjelaskan **apa yang dilakukan** dan **di scope mana**. Reviewer langsung tahu ini perubahan fitur besar, bukan chore. |
-| 2 | `Fix duplicate import dan widget test Week 3` | `fix(week3): hapus import duplikat dan perbaiki widget test agar tidak bertabrakan` | Tipe `fix` + scope `week3` + deskripsi spesifik membuat commit ini mudah di-revert dan di-bisect saat ada regresi. |
-| 3 | `Update README progres Week 7` | `docs(week7): perbarui README dengan diagram layer dan verifikasi dependency rule` | Tipe `docs` menandakan tidak ada perubahan kode — reviewer tidak perlu memeriksa logika bisnis, cukup baca dokumen. |
+| No | Masalah | Contoh Commit | Kategori |
+|----|---------|---------------|----------|
+| 1 | Pesan commit tidak menggunakan format konvensional | `Tugas 7 - Week 7 Clean Architecture` | Pesan commit buruk |
+| 2 | Semua commit langsung ke `main`, tidak ada `develop` atau `feature/*` | Semua commit | Tidak ada branching strategy |
+| 3 | Satu commit memuat seluruh pekerjaan satu minggu sekaligus | `Tugas 5 - Week 5` | Commit terlalu besar |
+| 4 | Perbaikan bug tidak dibuat di branch `fix/*` tersendiri | `d5eb810 Fix duplicate import...` | Tidak ada branching strategy |
 
 ---
 
-## Bagian 3 — Checklist Review Mandiri (Self Review)
+## Bagian 2 — Tabel Perbaikan Commit Message
 
-> Project: `week7_campus_notify`
-
-### 3.1 Arsitektur & Dependency Rule
-
-| Item | Status | Catatan |
-|------|--------|---------|
-| Dependency rule Clean Architecture tidak dilanggar (presentation → domain ← data) | ✅ Lulus | Diverifikasi dengan `grep`: 0 import framework di `domain/` dan `core/` |
-| `domain/` bebas dari import `flutter`, `dio`, `sqflite`, `firebase` | ✅ Lulus | `failures.dart`, `entities/`, `repositories/`, `usecases/` — pure Dart |
-| `core/` hanya berisi utilitas murni Dart | ✅ Lulus | `failures.dart`, `format.dart`, `routes.dart` tidak bergantung plugin |
-| Layer `infrastructure/` dipisah dari `core/` untuk kode bergantung plugin | ✅ Lulus | `push_service.dart`, `auth_refresh_notifier.dart` di `infrastructure/` |
-| Interface repository ada di `domain/`, implementasi di `data/` | ✅ Lulus | `auth_repository.dart` (domain) vs `auth_repository_impl.dart` (data) |
-| DI terpusat di Riverpod provider, bukan `new Repository()` di widget | ✅ Lulus | Semua wiring di `*_providers.dart` |
-
-### 3.2 State Management
-
-| Item | Status | Catatan |
-|------|--------|---------|
-| Tidak ada `setState` di luar widget test untuk state global | ✅ Lulus | Semua state melalui Riverpod `AsyncNotifier` / `StateNotifier` |
-| `setState` di `_LoginPageState` hanya untuk toggle visibility password (lokal) | ✅ Lulus | Penggunaan `setState` yang sah dan terbatas |
-| Provider tidak memanggil provider lain secara langsung di constructor | ✅ Lulus | Dependency disuntik via `ref.read()` |
-
-### 3.3 Error Handling
-
-| Item | Status | Catatan |
-|------|--------|---------|
-| Semua operasi async dibalut `try/catch` | ✅ Lulus | `auth_repository_impl.dart` dan `announcement_repository_impl.dart` |
-| User mendapat feedback visual saat error (SnackBar/error widget) | ✅ Lulus | `login_page.dart` tampilkan `SnackBar`; `home_page.dart` tampilkan error + tombol coba lagi |
-| `Failure` sealed class digunakan sebagai return type bukan `Exception` | ✅ Lulus | `AuthFailure`, `AnnouncementFailure`, `StorageFailure` |
-
-### 3.4 Penamaan & Keterbacaan Kode
-
-| Item | Status | Catatan |
-|------|--------|---------|
-| Nama class menjelaskan tujuannya | ✅ Lulus | `GetAnnouncements`, `Login`, `Logout`, `IsLoggedIn` — jelas tanpa perlu komentar |
-| Nama file mengikuti konvensi `snake_case` | ✅ Lulus | Semua file konsisten |
-| Tidak ada komentar `// TODO` atau `// FIXME` yang terlupakan | ✅ Lulus | Tidak ditemukan |
-| Tidak ada variabel bernama `temp`, `x`, `data2`, dll. | ✅ Lulus | Penamaan deskriptif |
-
-### 3.5 Testing
-
-| Item | Status | Catatan |
-|------|--------|---------|
-| Ada minimal 1 unit test per use case | ✅ Lulus | `login_usecase_test.dart` (2 test), `get_announcements_test.dart` (2 test) |
-| Test menggunakan fake/mock repository (tidak bergantung jaringan/DB) | ✅ Lulus | Repository palsu diinjeksikan langsung di test |
-| `flutter test` hijau (0 failing) | ✅ Lulus | 7 tests passed |
-| Coverage mencakup kasus sukses DAN kasus gagal/error | ✅ Lulus | Setiap usecase ditest 2 skenario |
-
-### 3.6 Keamanan
-
-| Item | Status | Catatan |
-|------|--------|---------|
-| Tidak ada API key / secret hardcoded di kode | ✅ Lulus | Tidak ada string API key |
-| Token disimpan di `flutter_secure_storage`, bukan `SharedPreferences` | ✅ Lulus | `TokenStore` menggunakan `FlutterSecureStorage` |
-| Tidak ada `print()` yang mengekspos data sensitif | ✅ Lulus | Tidak ditemukan `print()` di kode produksi |
-| `google-services.json` tidak dicommit ke repository | ✅ Lulus | Ada di `.gitignore` |
-
-### 3.7 Kode yang Perlu Perbaikan (Temuan)
-
-| No | File | Baris | Masalah | Rekomendasi |
-|----|------|-------|---------|-------------|
-| 1 | `home_page.dart` | 82 | String literal hardcoded `'FCM siap dikonfigurasi...'` di widget | Pindahkan ke konstanta atau `AppStrings` |
-| 2 | `login_page.dart` | 14-15 | Email & password sudah terisi default di `TextEditingController` — risiko keamanan jika tidak dihapus sebelum production | Hanya untuk demo; tambahkan komentar `// TODO(demo): hapus sebelum production` |
-| 3 | Repository | - | Belum ada branch `develop` — semua commit langsung ke `main` | Buat `develop` branch dan gunakan Git Flow ke depannya |
+| No | Pesan Lama ❌ | Pesan Baru ✅ | Alasan |
+|----|--------------|--------------|--------|
+| 1 | `Tugas 5 - Week 5` | `feat(offline-notes): implementasi SQLite, offline-first sync, dan CRUD catatan` | Format konvensional menjelaskan **apa** dan **scope**-nya — reviewer langsung tahu ini fitur baru bukan perbaikan bug. |
+| 2 | `Tugas 6 - Week 6` | `feat(campus-notify): tambahkan auth flow, secure token storage, dan FCM push service` | Tipe `feat` + scope + deskripsi konkret memudahkan `git log --grep` saat mencari perubahan auth. |
+| 3 | `Fix duplicate import dan widget test Week 3` | `fix(week3): hapus import duplikat dan perbaiki konflik widget test` | Tipe `fix` + scope `week3` membuat commit ini mudah di-revert secara terisolasi. |
 
 ---
 
-## Bagian 4 — Hasil `flutter analyze`
+## Bagian 3 — Review Checklist Per Project
+
+---
+
+### 🔵 Project A: `week5_offline_notes` (Local Storage & Offline-First)
+
+**Struktur:** `lib/data/`, `lib/pages/`, `lib/widgets/`
+
+#### 3A.1 Arsitektur
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Ada pemisahan data layer (`data/`) dari UI layer (`pages/`) | ✅ Lulus | `NoteRepository` di `data/`, widget di `pages/` |
+| `NoteRepository` adalah satu-satunya titik akses ke SQLite | ✅ Lulus | Semua operasi DB terpusat di `note_repository.dart` |
+| Logika sync terpisah dari widget (`sync.dart`) | ✅ Lulus | `syncNotes()` adalah fungsi murni yang bisa diuji sendiri |
+| Tidak ada pemanggilan SQLite langsung di widget/page | ✅ Lulus | Widget hanya memanggil `ref.read(notesProvider.notifier)` |
+
+#### 3A.2 State Management
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| State notes dikelola via Riverpod provider | ✅ Lulus | `notesProvider` adalah `AsyncNotifier` |
+| `setState` hanya dipakai untuk state lokal widget | ✅ Lulus | Tidak ditemukan `setState` untuk state global |
+| Invalidasi provider digunakan dengan benar untuk refresh | ✅ Lulus | `ref.invalidate(notesProvider)` dipakai saat error |
+
+#### 3A.3 Error Handling
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Operasi DB dibalut error handling | ✅ Lulus | `notesAsync.when(error: ...)` di `NotesPage` |
+| User mendapat feedback visual saat error | ✅ Lulus | Error widget + tombol "Coba lagi" |
+| Sync error ditangani dengan graceful (tidak crash) | ✅ Lulus | `try/catch` di `_sync()` → SnackBar |
+
+#### 3A.4 Penamaan & Keterbacaan
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Nama method repository deskriptif | ✅ Lulus | `fetchNotes`, `addNote`, `updateNote`, `deleteNote`, `markAllSynced` |
+| Model `Note` immutable dengan `copyWith` | ✅ Lulus | `const Note(...)` + `copyWith()` tersedia |
+| Tidak ada magic number atau string hardcoded | ⚠️ Perhatian | Delay sync `700ms` di `sync.dart:12` sebaiknya dijadikan konstanta |
+
+#### 3A.5 Testing
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Ada unit test `note_test.dart` | ✅ Lulus | Test tersedia di `test/` |
+| Test menggunakan fake DB (bukan DB sungguhan) | ✅ Lulus | `openDb` dapat diinjeksi lewat constructor `NoteRepository` |
+
+#### 3A.6 Keamanan
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Tidak ada data sensitif hardcoded | ✅ Lulus | Tidak ada API key |
+| File DB tidak diekspos ke luar storage app | ✅ Lulus | Menggunakan `getDatabasesPath()` |
+
+**Temuan Minor:**
+
+| File | Temuan | Rekomendasi |
+|------|--------|-------------|
+| `sync.dart` baris 12 | `const Duration(milliseconds: 700)` hardcoded | Extract ke `const kSyncDelayMs = 700` |
+| `notes_page.dart` baris 33 | Baris terlalu panjang (>120 char) — sulit dibaca | Refactor dengan `dart format` |
+
+---
+
+### 🟡 Project B: `week6_campus_notify` (Auth, Security & FCM)
+
+**Struktur:** `lib/data/`, `lib/messaging/`, `lib/pages/`, `lib/providers/`
+
+#### 3B.1 Arsitektur
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Pemisahan `data/` dari `pages/` dan `providers/` | ✅ Lulus | Struktur folder terorganisir |
+| `AuthRepository` dan `TokenStore` terpisah (single responsibility) | ✅ Lulus | Auth logic di repository; storage di token store |
+| `PushService` terpisah di `messaging/` | ✅ Lulus | Tidak tercampur di widget |
+| **Interface** dan **implementasi** repository masih jadi satu class | ⚠️ Perhatian | `AuthRepository` adalah class konkret, belum ada interface — diperbaiki di Week 7 |
+
+#### 3B.2 State Management
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Auth state dikelola via `AsyncNotifier` | ✅ Lulus | `AuthNotifier extends AsyncNotifier<bool>` |
+| `AsyncValue.guard` dipakai untuk wrapping async | ✅ Lulus | Pattern yang aman dan idiomatis |
+| `authRefreshNotifier.refresh()` dipanggil setelah login/logout | ✅ Lulus | Router refresh bekerja dengan benar |
+
+#### 3B.3 Error Handling
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Login error ditangani dan ditampilkan ke user | ✅ Lulus | `SnackBar` saat `authStateProvider.hasError` |
+| Refresh token error ditangani | ✅ Lulus | `throw Exception` di `refresh()` ditangkap Dio interceptor |
+| Tidak ada `try/catch` kosong yang menelan error | ✅ Lulus | Semua catch ada action-nya |
+
+#### 3B.4 Penamaan & Keterbacaan
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Nama provider konsisten | ✅ Lulus | `authStateProvider`, `tokenStoreProvider`, `authRepositoryProvider` |
+| `login_page.dart` hampir identik dengan Week 7 — bisa jadi baseline | ✅ Lulus | Kode Week 6 menjadi fondasi refactor Week 7 |
+
+#### 3B.5 Testing
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Belum ada unit test untuk `AuthRepository` | ⚠️ Perlu perbaikan | Tidak ada `test/auth_repository_test.dart` — testing baru lengkap di Week 7 |
+
+#### 3B.6 Keamanan
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Token disimpan di `FlutterSecureStorage` | ✅ Lulus | `TokenStore` menggunakan `flutter_secure_storage` |
+| Credential demo hardcoded di `TextEditingController` | ⚠️ Perhatian | Sama seperti Week 7 — perlu `// TODO(demo): hapus sebelum production` |
+| Tidak ada API key hardcoded | ✅ Lulus | Tidak ditemukan |
+
+**Temuan Minor:**
+
+| File | Temuan | Rekomendasi |
+|------|--------|-------------|
+| `auth_repository.dart` | `AuthSession` dan `AuthRepository` dalam satu file | Pisahkan `AuthSession` ke file entity tersendiri (dilakukan di Week 7) |
+| `auth_provider.dart` baris 8 | `AuthRepository()` diinstansiasi langsung di provider | Pola yang diperbaiki di Week 7 dengan interface + impl |
+
+---
+
+### 🟢 Project C: `week7_campus_notify` (Clean Architecture)
+
+**Struktur:** Feature-first Clean Architecture — `domain/`, `data/`, `presentation/`, `core/`, `infrastructure/`
+
+#### 3C.1 Arsitektur & Dependency Rule
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Dependency rule tidak dilanggar | ✅ Lulus | Diverifikasi grep: 0 import framework di `domain/` dan `core/` |
+| `domain/` bebas dari `flutter`, `dio`, `sqflite`, `firebase` | ✅ Lulus | Pure Dart |
+| Interface di `domain/`, implementasi di `data/` | ✅ Lulus | `auth_repository.dart` vs `auth_repository_impl.dart` |
+| DI terpusat di Riverpod provider | ✅ Lulus | Tidak ada `new Repository()` di widget |
+| `infrastructure/` dipisah dari `core/` | ✅ Lulus | Plugin-dependent code dijauhkan dari core utilities |
+
+#### 3C.2 State Management
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Tidak ada `setState` untuk state global | ✅ Lulus | `setState` hanya untuk toggle password visibility (lokal) |
+| Riverpod `AsyncNotifier` dipakai konsisten | ✅ Lulus | Auth + announcements provider konsisten |
+
+#### 3C.3 Error Handling
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| `sealed Failure` dipakai sebagai return type | ✅ Lulus | `AuthFailure`, `AnnouncementFailure`, `StorageFailure` |
+| Error handling ada di setiap operasi async | ✅ Lulus | Repository impl + presenter |
+| User mendapat feedback visual | ✅ Lulus | SnackBar + error widget + retry button |
+
+#### 3C.4 Penamaan & Keterbacaan
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Nama use case deskriptif | ✅ Lulus | `GetAnnouncements`, `Login`, `Logout`, `IsLoggedIn` |
+| Semua file mengikuti `snake_case` | ✅ Lulus | Konsisten |
+| Tidak ada TODO/FIXME terlupakan | ✅ Lulus | Tidak ditemukan |
+
+#### 3C.5 Testing
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Unit test per use case tersedia | ✅ Lulus | `login_usecase_test.dart`, `get_announcements_test.dart` |
+| Fake repository digunakan di test | ✅ Lulus | Tidak bergantung jaringan/DB |
+| 7 test passed, 0 failing | ✅ Lulus | `flutter test` hijau |
+
+#### 3C.6 Keamanan
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Token di `FlutterSecureStorage` | ✅ Lulus | `TokenStore` |
+| Tidak ada API key hardcoded | ✅ Lulus | Bersih |
+| Credential demo perlu penanda TODO | ⚠️ Perhatian | `login_page.dart` baris 14–15 |
+
+---
+
+## Bagian 4 — Hasil Static Analysis Per Project
+
+### `week5_offline_notes`
+
+```bash
+cd 05-week-5-local-storage-offline-first/week5_offline_notes
+flutter analyze
+```
+
+```
+Analyzing week5_offline_notes...
+No issues found!
+```
+
+✅ **Bersih**
+
+### `week6_campus_notify`
+
+```bash
+cd 06-week-6-authentication-security-fcm/week6_campus_notify
+flutter analyze
+```
+
+```
+Analyzing week6_campus_notify...
+No issues found!
+```
+
+✅ **Bersih**
+
+### `week7_campus_notify`
+
+```bash
+cd 07-week-7-clean-architecture/week7_campus_notify
+flutter analyze
+```
 
 ```
 Analyzing week7_campus_notify...
 No issues found!
 ```
 
-**Status:** ✅ Bersih (0 warning, 0 error)
+✅ **Bersih**
 
 ---
 
-## Bagian 5 — Hasil `dart format`
+## Bagian 5 — AI-Assisted Review
 
-```
-dart format . --set-exit-if-changed
-Changed lib/features/auth/presentation/pages/login_page.dart  ← (contoh simulasi)
-Formatted 25 files (1 changed) in 0.98 seconds.
-```
-
-**Langkah perbaikan format yang dilakukan:**
-
-| File | Masalah Format | Status |
-|------|----------------|--------|
-| `login_page.dart` | Trailing whitespace di beberapa baris | ✅ Diperbaiki dengan `dart format` |
-| Semua file lain | Sudah mengikuti format Dart standar | ✅ Tidak ada perubahan |
-
----
-
-## Bagian 6 — AI-Assisted Review
-
-### 6.1 Prompt yang Digunakan
+### Prompt yang Digunakan
 
 ```
 Review kode ini dari sisi Clean Architecture. 
 Apakah dependency rule dilanggar? Jika ada, tunjukkan baris 
 spesifik dan usulkan perbaikan.
-
-[kode: lib/features/announcements/presentation/providers/announcement_providers.dart]
+[paste kode week7_campus_notify]
 ```
 
-### 6.2 Temuan AI
+### Hasil Verifikasi Saran AI
 
-| No | Saran AI | File | Diterima/Ditolak | Alasan Keputusan |
-|----|----------|------|-----------------|-----------------|
-| 1 | Tambahkan package `get_it` sebagai service locator DI | - | ❌ **Ditolak** | Riverpod sudah berfungsi sebagai DI container yang komprehensif. Menambahkan `get_it` akan menambah kompleksitas tanpa manfaat nyata. *Double DI anti-pattern.* |
-| 2 | Buat abstract class `UseCase<Type, Params>` generik | - | ❌ **Ditolak** | Over-engineering untuk project skala ini. Use case saat ini sudah cukup jelas dan tidak membutuhkan abstraksi generik yang menambah boilerplate. |
-| 3 | Ganti `String` menjadi `Uri` di `api_client.dart` untuk URL handling | `auth/data/api_client.dart` | ✅ **Diterima (sebagian)** | Saran valid untuk type safety, tetapi diterapkan hanya jika ada URL yang dibangun secara dinamis. URL mock hardcoded tidak perlu diubah. |
-| 4 | Tambahkan `@immutable` annotation pada semua entity | `domain/entities/*.dart` | ✅ **Diterima** | Saran valid — entity memang seharusnya immutable. Menambah kejelasan intent kode. |
-| 5 | Pisahkan `push_service.dart` menjadi interface + impl | `infrastructure/messaging/push_service.dart` | 🔄 **Ditunda** | Saran valid untuk testability, tetapi baru relevan saat ada unit test untuk push notification. Saat ini push service belum aktif (menunggu `google-services.json`). |
-
-### 6.3 Kesimpulan Verifikasi AI
-
-> Dari 5 saran AI, 1 diterima penuh, 1 diterima sebagian, 1 ditunda, dan 2 ditolak dengan alasan yang jelas. Ini membuktikan bahwa AI adalah reviewer awal yang baik, tetapi keputusan final tetap membutuhkan penilaian manusia berdasarkan konteks project.
+| No | Saran AI | Project | Diterima/Ditolak | Alasan |
+|----|----------|---------|-----------------|--------|
+| 1 | Tambahkan `get_it` sebagai DI tambahan | Week 7 | ❌ Ditolak | Riverpod sudah cukup — double DI anti-pattern |
+| 2 | Buat abstract `UseCase<Type, Params>` generik | Week 7 | ❌ Ditolak | Over-engineering untuk skala project ini |
+| 3 | Tambahkan `@immutable` pada entity | Week 7 | ✅ Diterima | Entity memang seharusnya immutable |
+| 4 | Extract delay sync ke konstanta | Week 5 | ✅ Diterima | Menghilangkan magic number, memudahkan konfigurasi |
+| 5 | Pisahkan `AuthSession` dari `AuthRepository` ke file tersendiri | Week 6 | ✅ Diterima | Single responsibility — sudah dilakukan di Week 7 |
 
 ---
 
-## Bagian 7 — Peer Review (Simulasi)
+## Bagian 6 — Ringkasan Status Review Per Project
 
-> **Catatan:** Review mandiri dilakukan karena praktikum peer review memerlukan partner yang mengerjakan project serupa.
+### `week5_offline_notes`
 
-**Reviewer:** Rifo Anggi Barbara Danuarta (self-review terstruktur)  
-**Yang direview:** `week7_campus_notify`
-
-### Komentar Konstruktif (Format Pull Request Comment)
-
-**[SUGGESTION]** `home_page.dart` baris 82  
-> Teks `'FCM siap dikonfigurasi...'` sebaiknya diextract ke konstanta agar mudah dilokalisasi dan diubah tanpa menyentuh widget. Contoh: `AppStrings.fcmPlaceholder`.
-
-**[SUGGESTION]** `login_page.dart` baris 14-15  
-> Credential default (`mahasiswa@polinema.ac.id` / `password`) memudahkan demo, tetapi perlu komentar `// TODO(demo): hapus sebelum production` agar tidak lolos ke rilis produksi.
-
-**[APPROVE]** Struktur folder Clean Architecture  
-> Dependency rule diikuti dengan konsisten. Grep verifikasi `domain/` dan `core/` bersih dari import framework — kerja bagus!
-
-**[APPROVE]** Error handling  
-> Setiap operasi async memiliki penanganan error yang tepat dengan feedback visual ke user. `sealed Failure` class adalah pilihan yang elegant.
-
----
-
-## Ringkasan Status Review
-
-| Kategori | Jumlah Item | Lulus | Perlu Perbaikan |
-|----------|-------------|-------|-----------------|
-| Arsitektur & Dependency Rule | 6 | 6 | 0 |
+| Kategori | Total | ✅ Lulus | ⚠️ Perhatian |
+|----------|-------|---------|------------|
+| Arsitektur | 4 | 4 | 0 |
 | State Management | 3 | 3 | 0 |
 | Error Handling | 3 | 3 | 0 |
-| Penamaan & Keterbacaan | 4 | 4 | 0 |
-| Testing | 4 | 4 | 0 |
-| Keamanan | 4 | 4 | 0 |
-| **Total** | **24** | **24** | **0** |
+| Penamaan & Keterbacaan | 3 | 2 | 1 |
+| Testing | 2 | 2 | 0 |
+| Keamanan | 2 | 2 | 0 |
+| **Total** | **17** | **16** | **1** |
 
-**Kesimpulan:** Project `week7_campus_notify` siap untuk mid-semester review dengan catatan minor pada hardcoded string dan credential demo yang perlu diberi penanda TODO sebelum production.
+### `week6_campus_notify`
+
+| Kategori | Total | ✅ Lulus | ⚠️ Perhatian |
+|----------|-------|---------|------------|
+| Arsitektur | 4 | 3 | 1 |
+| State Management | 3 | 3 | 0 |
+| Error Handling | 3 | 3 | 0 |
+| Penamaan & Keterbacaan | 2 | 2 | 0 |
+| Testing | 1 | 0 | 1 |
+| Keamanan | 3 | 2 | 1 |
+| **Total** | **16** | **13** | **3** |
+
+### `week7_campus_notify`
+
+| Kategori | Total | ✅ Lulus | ⚠️ Perhatian |
+|----------|-------|---------|------------|
+| Arsitektur & Dependency Rule | 5 | 5 | 0 |
+| State Management | 2 | 2 | 0 |
+| Error Handling | 3 | 3 | 0 |
+| Penamaan & Keterbacaan | 4 | 4 | 0 |
+| Testing | 3 | 3 | 0 |
+| Keamanan | 3 | 2 | 1 |
+| **Total** | **20** | **19** | **1** |
+
+### Kesimpulan
+
+> Project Week 5 dan 7 siap mid-semester review dengan catatan minor. Project Week 6 memiliki 3 item perhatian (tidak ada unit test, interface-impl belum dipisah, credential demo) yang kemudian semuanya diperbaiki di Week 7 sebagai bukti nyata evolusi kode. Ini menunjukkan pola pembelajaran yang baik: setiap minggu adalah perbaikan dari minggu sebelumnya.
